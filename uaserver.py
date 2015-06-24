@@ -165,8 +165,13 @@ if __name__ == "__main__":
         print "Usage: python uaserver.py config"
         raise SystemExit
 
-
     Config = sys.argv[1]
+    
+    parser = make_parser()
+    Datos = SipHandler()
+    parser.setContentHandler(Datos)
+    parser.parse(open(Config))
+    Dicc = SipHandler_Datos.get_attrs()
 
     USERNAME = Dicc['userName']
     IP = Dicc['servIp']
@@ -178,7 +183,7 @@ if __name__ == "__main__":
     AUDIO = Dicc['audioPath']
 
     Direccion = USERNAME + '@dominio.com'
-
+    log('', '', '', 'Starting...')
 
     try:
 
