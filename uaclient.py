@@ -1,11 +1,9 @@
 #Practica final PTAVI
 #!/usr/bin/python
 # -*- coding: iso-8859-15 -*-
-
 """
 Programa cliente que abre un socket a un servidor
 """
-
 
 import socket
 import sys
@@ -18,26 +16,27 @@ from xml.sax.handler import ContentHandler
 method_list = ['REGISTER', 'INVITE', 'BYE']
 
 # Comprobamos si es correcto el numero de argumentos pasados
+
 if len(sys.argv) != 4:
     print "Usage: python uaclient.py config method option"
     raise SystemExit
 
 # Cliente UDP simple.
+
 try:
-	CONFIG = sys.argv[1]
-	METHOD = sys.argv[2].upper()
-	if METHOD not in method_list:
-		print "Usage: python uaclient.py config method option"
-		raise SystemExit
 
-	OPTION = sys.argv[3]
-	
-	fich = open(CONFIG, 'r')
-        line = fich.readlines()
-	fich.close()
+    CONFIG = sys.argv[1]
+    METHOD = sys.argv[2].upper()
+    OPTION = sys.argv[3]
 
-    #Extraemos el contenido del fichero
-    
+    if METHOD not in method_list:
+       print "Usage: python uaclient.py config method option"
+       raise SystemExit
+
+    fich = open(CONFIG, 'r')
+    line = fich.readlines()
+    fich.close()
+
     #CLIENTE
     lineusuario = line[1].split(">")
     cuenta = lineusuario[0].split("=")[1]
@@ -73,67 +72,100 @@ try:
 
     my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    my_socket.connect((IP_PROXY, int(PUERTO_PROXY)))
+    my_socket.connect((IP_PROXY, int(PORT_PROXY)))
 
-    fich = open(PATH_LOG, 'r+')
-    
-   
-
-# Contenido que vamos a enviar
+fichero = open(PATH_LOG, 'r+')
 
 
-
-LINE = METODO + " sip:" + Direccion.split(":")[0] + " SIP/2.0\r\n\r\n"
-
-
-
-
-
-
-
-
-
-
-
-print "Enviando: " + LINE
-
-my_socket.send(LINE)
-
-try:
-
-    data = my_socket.recv(1024)
-
-except socket.error:
-
-    print ('Error:No server listening at ' + str(SERVER) + ' port ' + int(PORT))
-
-    raise SystemExit
-
-
-
-print 'Recibido --', data
-
-line = data.split('\r\n\r\n')[:-1]
-
-
-
-if line == ["SIP/2.0 100 Trying", "SIP/2.0 180 Ringing", "SIP/2.0 200 OK"]:
-
-    LINE = "ACK sip:" + Direccion.split(":")[0] + " SIP/2.0\r\n\r\n"
-
+def p_data(my_socket):
+    print "Enviando: " + LINE
     my_socket.send(LINE)
+    try:
+        data = my_socket.recv(1024)
+    except socket.error:
+        print ('Error:No server listening at ' + str(IP_PROXY))
+        raise SystemExit
 
-elif line == ["SIP/2.0 400 Bad Request"]:
+    if METHOD == "REGISTER":
+        fich = open(PATH_LOG, 'a')
+        Register = ": REGISTER sip:" + USUARIO + ":" + PORT + \
+        " SIP/2.0 Expires: " + OPTION + '\r\n'
+        fich.write(str(time.time()) + " Sent to " + IP_PROXY + \
+        ":" + PORT_PROXY + Register)
+        LINE = 'REGISTER ' + "sip:" + USUARIO
+        LINE += ":" + PORT + " SIP/2.0 \r\n" + "Expires: " + OPTION + "\r\n"
+        print LINE
+        p_data(my_socket)
+        reciv_register = data.split('\r\n\r\n')[0:-1]
+        if reciv_register == ['SIP/2.0 200 OK']:
+            print "Recibido --", data
+            fich.write(str(time.time()) + " Received from " + IP_PROXY + \
+            ":" + PORT_PROXY + ": 200 OK" + '\r\n')
 
-    print "El servidor no entiende la petición"
+        if OPTION == '0':
+            fich.write(str(time.time()) + " Finishing...")
+            fich.close()
+            print "Terminando socket..."
+            my_socket.close()
+        else:
+            fich.write(str(time.time()) + " Starting..." + '\r\n')
 
+    if METHOD == 'INVITE':
+        fich = open(PATH_LOG, 'a')
+        LINE = 'INVITE ' + "sip: " + OPTION + " SIP/2.0 \r\n"
+        LINE += "Content-Type: application/sdp \r\n\r\n" + "v=0 \r\n"
+        LINE += "o=" + USUARIO + " " + IP + ' \r\n'
+        LINE += "s=vampireando"
+        LINE += ' \r\n' + "t=0" + ' \r\n' + "m=audio " + PORT_AUDIO + \
+        ' RTP' + '\r\n'
+        fich.write(str(time.time()) + " Sent to " + IP_PROXY + ":" + \
+        PORT_PROXY + ': ' + LINE + '\r\n')
+        print LINE
+        p_data(my_socket)
 
+    try:
+        if data != "SIP/2.0 404 User Not Found":
+            Puerto_RTP = data.split(' ')[14]
+            invite = data.split('\r\n\r\n')[0:-1]
+            reciv_inv = invite[0:3]
+            invite1 = str(reciv_inv)
+            print 'Recibido PROXY: ' + rcv_invite2
+            fich.write(str(time.time()) + " Received from " + IP_PROXY + \
+            ":" + PORT_PROXY + ': ' + invite1 + '\r\n')
+            METHOD = "ACK"
+            LINEA = METHOD + ' sip:' + OPTION + ' SIP/2.0\r\n'
+            print '\r\n\r\n' + "Enviando: " + LINEA
+            fich.write(str(time.time()) + " Sent to " + IP_PROXY + ":" + \
+            PORT_PROXY + ': ' + LINEA)
+            my_socket.send(LINEA)
+            fich.write(str(time.time()) + ' Conexion audio RTP ' + '\r\n')
+            aAejecutar = './mp32rtp -i ' + IP + ' -p ' + str(Puerto_RTP) + \
+            ' < ' + PATH_AUDIO
+            print "Ejecutamos", aAejecutar
+            os.system(aAejecutar)
+            print ("Se ha ejecutado" + '\r\n\r\n')
+            else:
+                print data
+        except IndexError:
+            fich.write(str(time.time()) + \
+            " Error: El servidor no esta escuchando")
+            sys.exit(str(time.time()) + \
+            "  Error: El servidor no esta escuchando")
 
-elif line == ["SIP/2.0 405 Method Not Allowed"]:
-
-    print "Enviado metodo incorrecto"
-    
-print "Terminando socket..."
-# Cerramos todo
-my_socket.close()
-print "Fin."
+    if METHOD == 'BYE':
+        fich = open(PATH_LOG, 'a')
+        BYE = 'BYE ' + "sip:" + OPTION + " SIP/2.0" + '\r\n'
+        print BYE
+        LINE = BYE
+        fich.write(str(time.time()) + " Sent to " + IP_PROXY + \
+        ":" + PORT_PROXY + ': ' + BYE + '\r\n')
+        p_data(my_socket)
+        reciv_bye = data.split('\r\n\r\n')[0:-1]
+        if reciv_bye == ['SIP/2.0 200 OK']:
+            fich.write(str(time.time()) + " Received from " + IP_PROXY + \
+            ":" + PORT_PROXY + ": 200 OK" + '\r\n')
+            fich.close()
+            print data
+            # Cerramos todo
+            my_socket.close()
+            print "Fin."
