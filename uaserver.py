@@ -11,9 +11,10 @@ import os.path
 import socket
 
 
-P_rtp = []
+
 
 class SipHandler(SocketServer.DatagramRequestHandler):
+
 
     def handle(self):
 		
@@ -30,9 +31,6 @@ class SipHandler(SocketServer.DatagramRequestHandler):
             if Metodo == "INVITE" or Metodo == "ACK" or Metodo == "BYE":
 				
                 if Metodo == "INVITE":
-					Destinatario = lines.split(' ')[2]
-					global P_rtp
-					P_rtp = lines.split(' ')[12]
 					# Si el metodo es invite enviamos la correspondiente 
 					# respuesta
                     Answer = 'SIP/2.0 100 Trying' + '\r\n\r\n'
@@ -49,7 +47,7 @@ class SipHandler(SocketServer.DatagramRequestHandler):
 
                 elif Metodo == "ACK":
                     # Tratamiento ACK
-                    aEjecutar = "mp32rtp -i 127.0.0.1 -p" + str(P_rtp) + " < " + PATH_AUDIO
+                    aEjecutar = "mp32rtp -i 127.0.0.1 -p" + str(PUERTO_AUDIO) + " < " + PATH_AUDIO
                     print "Vamos a ejecutar", aEjecutar
                     os.system(aEjecutar)
                 elif Metodo == "BYE":
@@ -64,20 +62,22 @@ class SipHandler(SocketServer.DatagramRequestHandler):
                 self.wfile.write(Answer)
 
 
-          
 
 if __name__ == "__main__":
 
 
-    if len(sys.argv) != 2:
-        print "Usage: python uaserver.py config"
-        raise SystemExit
+	if len(sys.argv) != 2:
+	    print "Usage: python uaserver.py config"
+	    raise SystemExit
 
     Config = sys.argv[1]
+
+	print "Listening..."
 
     fich = open(Config, 'r')
     line = fich.readlines()
     fich.close()
+
 
     #CLIENTE
     lineusuario = line[1].split(">")
@@ -106,10 +106,9 @@ if __name__ == "__main__":
     pathaudio = linedeaudio[0].split("=")[1]
     PATH_AUDIO = pathaudio.split(" ")[0][1:-1]
 
-	my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-	my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-	my_socket.connect((IP_PROXY, int(PORT_PROXY)))
-		
+    my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    my_socket.connect((IP_PROXY, int(PORT_PROXY)))
+	
     serv = SocketServer.UDPServer(("127.0.0.1", int(PORT)), SipHandler)
-    print "Listening..."
     serv.serve_forever()
