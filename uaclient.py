@@ -116,7 +116,7 @@ def p_data(my_socket):
         LINE += "Content-Type: application/sdp \r\n\r\n" + "v=0 \r\n"
         LINE += "o=" + USUARIO + " " + IP + ' \r\n'
         LINE += "s=vampireando"
-        LINE += ' \r\n' + "t=0" + ' \r\n' + "m=audio " + PORT_AUDIO + \
+        LINE += ' \r\n' + "t=0" + ' \r\n' + "m=audio " + PUERTO_AUDIO + \
         ' RTP' + '\r\n'
         fich.write(str(time.time()) + " Sent to " + IP_PROXY + ":" + \
         PORT_PROXY + ': ' + LINE + '\r\n')
@@ -139,7 +139,7 @@ def p_data(my_socket):
             PORT_PROXY + ': ' + LINEA)
             my_socket.send(LINEA)
             fich.write(str(time.time()) + ' Conexion audio RTP ' + '\r\n')
-            aAejecutar = './mp32rtp -i ' + IP + ' -p ' + str(Puerto_RTP) + \
+            aAejecutar = './mp32rtp -i ' + IP + ' -p ' + str(PORT) + \
             ' < ' + PATH_AUDIO
             print "Ejecutamos", aAejecutar
             os.system(aAejecutar)
