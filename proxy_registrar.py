@@ -98,7 +98,7 @@ class Proxy(SocketServer.DatagramRequestHandler):
         de direcciones para poder enviarle las respuestas
         """
         global Booleano, Destinatario, line
-        line_list = line.split(" ")
+        line_list = line
         Cliente = " "
         for clave in dicc:
             if clave == Destinatario:
@@ -151,7 +151,7 @@ if __name__ == "__main__":
 
     dicc = {}
     Destinatario = []
-    booleano = False
+    Booleano = False
     line = []
 
     fichero = open(Config, 'r')
