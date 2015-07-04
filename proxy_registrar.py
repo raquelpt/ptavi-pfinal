@@ -17,13 +17,14 @@ class Proxy(SocketServer.DatagramRequestHandler):
         """
 
         fich = open(PATH_DATABASE, "w")
-        escribe = User + "\t" + IP + "\t" + Port + "\t"
-        escribe += Date + "\t" + Expires + "\r\n"
-        fich.write(escribe)
-        for clave in registro:
-            tiempo = time.gmtime(float(registro[clave][3]))
-            hora = time.strftime("%Y%m%d%H%M%S", tiempo)
-            fich.write(linea)
+        for Destinatario in dicc.keys():
+            Ip = dicc[Destinatario][0]
+            Puerto = dicc[Destinatario][1]
+            Date = dicc[Destinatario][2]
+            Expires = dicc[Destinatario][3]
+            escribe = Destinatario + "\t" + Ip + "\t" + str(Puerto) + "\t"
+            escribe += str(Date) + "\t" + str(Expires) + "\r\n"
+            fich.write(escribe)
         fich.close()
 
     def handle(self):
