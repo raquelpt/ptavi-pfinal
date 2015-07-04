@@ -9,30 +9,13 @@ import socket
 import sys
 import os
 import time
-from xml.sax import make_parser
-from xml.sax.handler import ContentHandler
 
-
-method_list = ['REGISTER', 'INVITE', 'BYE']
-
-# Comprobamos si es correcto el numero de argumentos pasados
-
-if len(sys.argv) != 4:
-    print "Usage: python uaclient.py config method option"
-    raise SystemExit
-
-# Cliente UDP simple.
 
 try:
-
     CONFIG = sys.argv[1]
     METHOD = sys.argv[2].upper()
     OPTION = sys.argv[3]
-    data = []
-
-    if METHOD not in method_list:
-       print "Usage: python uaclient.py config method option"
-       raise SystemExit
+    PRUEBA = []
 
     fich = open(CONFIG, 'r')
     line = fich.readlines()
@@ -41,34 +24,34 @@ try:
     #CLIENTE
     lineusuario = line[1].split(">")
     cuenta = lineusuario[0].split("=")[1]
-    USUARIO = cuenta.split(" ")[0][1:-1]
+    USUARIO = cuenta.split(" ")[0][1:-2]
     #SERVER
     lineserver = line[2].split(">")
     uaserver = lineserver[0].split("=")[1]
     SERVER = uaserver.split(" ")[0][1:-1]
     #Port
     puertserver = lineserver[0].split("=")[2]
-    PORT = puertserver.split(" ")[0][1:-1]
+    PORT = puertserver.split(" ")[0][1:-2]
     #Port AUDIO RTP
     lineaudiortp = line[3].split(">")
     rtpaudio = lineaudiortp[0].split("=")[1]
-    PUERTO_AUDIO = rtpaudio.split(" ")[0][1:-1]
+    PUERTO_AUDIO = rtpaudio.split(" ")[0][1:-2]
     #IP DEL PROXY
     lineipproxy = line[4].split(">")
     ipproxy = lineipproxy[0].split("=")[1]
     IP_PROXY = ipproxy.split(" ")[0][1:-1]
     #PUERTO DEL PROXY
     puertoproxy = lineipproxy[0].split("=")[2]
-    PORT_PROXY = puertoproxy.split(" ")[0][1:-1]
+    PORT_PROXY = puertoproxy.split(" ")[0][1:-2]
     #LOG
     linelog = line[5].split(">")
     log = linelog[0].split("=")[1]
-    PATH_LOG = log.split(" ")[0][1:-1]
+    PATH_LOG = log.split(" ")[0][1:-2]
     #PATH DEL AUDIO
     linedeaudio = line[6].split(">")
     pathaudio = linedeaudio[0].split("=")[1]
-    PATH_AUDIO = pathaudio.split(" ")[0][1:-1]
-
+    PATH_AUDIO = pathaudio.split(" ")[0][1:-2]
+    
     # Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
     my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -76,18 +59,36 @@ try:
 
     fichero = open(PATH_LOG, 'r+')
 
-    def p_data(my_socket):
-     	global data
-	my_socket.send(LINE)
+    def pdata(my_socket):
+        global PRUEBA
+        my_socket.send(LINE)
+        try:
+            PRUEBA = my_socket.recv(1024)
+        except socket.error:
+           # fich.write(str(time.time()) + " Error:No server listening at " + IP_PROXY + " port " + PORT_PROXY)
+            print ('Error:No server listening at ' + str(IP_PROXY) + " port " + PORT_PROXY)
+            raise SystemExit
 
-    try:
-        data = my_socket.recv(1024)
+    # Comprobamos si es correcto el numero de argumentos pasados
 
-	except socket.error:
-
-	fich.write(str(time.time()) + " Error:No server listening at " + IP_PROXY + " port " + PUERTO_PROXY)
-        print ('Error:No server listening at ' + str(IP_PROXY) + " port " + PORT_PROXY)
+    if len(sys.argv) != 4:
+        LINE = "Numero de argumentos incorrectos"
+        print LINE
         raise SystemExit
+
+
+except IndexError:
+    LINE = "Usage: python uaclient.py config method option 1"
+    print LINE
+    raise SystemExit
+
+
+method_list = ['REGISTER', 'INVITE', 'BYE']
+
+
+if METHOD not in method_list:
+    print "Usage: python uaclient.py config method option"
+    raise SystemExit
 
 
 if METHOD == "REGISTER":
@@ -99,10 +100,10 @@ if METHOD == "REGISTER":
     LINE = 'REGISTER ' + "sip:" + USUARIO
     LINE += ":" + PORT + " SIP/2.0 \r\n" + "Expires: " + OPTION + "\r\n"
     print LINE
-    p_data(my_socket)
-    reciv_register = data.split('\r\n\r\n')[0:-1]
+    pdata(my_socket)
+    reciv_register = PRUEBA.split('\r\n\r\n')[0:-1]
     if reciv_register == ['SIP/2.0 200 OK']:
-        print "Recibido --", data
+        print "Recibido --", PRUEBA
         fich.write(str(time.time()) + " Received from " + IP_PROXY + \
         ":" + PORT_PROXY + ": 200 OK" + '\r\n')
 
@@ -125,12 +126,12 @@ if METHOD == 'INVITE':
     fich.write(str(time.time()) + " Sent to " + IP_PROXY + ":" + \
     PORT_PROXY + ': ' + LINE + '\r\n')
     print LINE
-    p_data(my_socket)
+    pdata(my_socket)
 
     try:
-        if data != "SIP/2.0 404 User Not Found":
-            Puerto_RTP = data.split(' ')[14]
-            invite = data.split('\r\n\r\n')[0:-1]
+        if PRUEBA != "SIP/2.0 404 User Not Found":
+            Puerto_RTP = PRUEBA.split(' ')[14]
+            invite = PRUEBA.split('\r\n\r\n')[0:-1]
             reciv_inv = invite[0:3]
             invite1 = str(reciv_inv)
             print 'Recibido PROXY: ' + rcv_invite2
@@ -149,12 +150,12 @@ if METHOD == 'INVITE':
             os.system(aAejecutar)
             print ("Se ha ejecutado" + '\r\n\r\n')
         else:
-            print data
-        except IndexError:
-            fich.write(str(time.time()) + \
-            " Error: El servidor no esta escuchando")
-            sys.exit(str(time.time()) + \
-            "  Error: El servidor no esta escuchando")
+            print PRUEBA
+    except IndexError:
+        fich.write(str(time.time()) + \
+        " Error: El servidor no esta escuchando")
+        sys.exit(str(time.time()) + \
+        "  Error: El servidor no esta escuchando")
 
 if METHOD == 'BYE':
     fich = open(PATH_LOG, 'a')
@@ -163,13 +164,13 @@ if METHOD == 'BYE':
     LINE = BYE
     fich.write(str(time.time()) + " Sent to " + IP_PROXY + \
     ":" + PORT_PROXY + ': ' + BYE + '\r\n')
-    p_data(my_socket)
-    reciv_bye = data.split('\r\n\r\n')[0:-1]
+    pdata(my_socket)
+    reciv_bye = PRUEBA.split('\r\n\r\n')[0:-1]
     if reciv_bye == ['SIP/2.0 200 OK']:
         fich.write(str(time.time()) + " Received from " + IP_PROXY + \
         ":" + PORT_PROXY + ": 200 OK" + '\r\n')
         fich.close()
-        print data
+        print PRUEBA
         # Cerramos todo
         my_socket.close()
         print "Fin."
