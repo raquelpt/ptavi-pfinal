@@ -28,7 +28,7 @@ try:
     CONFIG = sys.argv[1]
     METHOD = sys.argv[2].upper()
     OPTION = sys.argv[3]
-	data = []
+    data = []
 
     if METHOD not in method_list:
        print "Usage: python uaclient.py config method option"
@@ -78,14 +78,14 @@ try:
 
     def p_data(my_socket):
      	global data
-		my_socket.send(LINE)
+	my_socket.send(LINE)
 
     try:
         data = my_socket.recv(1024)
 
 	except socket.error:
 
-		fich.write(str(time.time()) + " Error:No server listening at " + IP_PROXY + " port " + PUERTO_PROXY)
+	fich.write(str(time.time()) + " Error:No server listening at " + IP_PROXY + " port " + PUERTO_PROXY)
         print ('Error:No server listening at ' + str(IP_PROXY) + " port " + PORT_PROXY)
         raise SystemExit
 
