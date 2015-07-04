@@ -172,7 +172,7 @@ if __name__ == "__main__":
     #log del proxy
     line_log = lines[3].split(">")
     log = line_log[0].split("=")[1]
-    PATH_LOGPROXY = log.split(" ")[0][1:-1]
+    PATH_LOGPROXY = log.split(" ")[0][1:-2]
 
     fich = open(PATH_LOGPROXY, "a")
 
