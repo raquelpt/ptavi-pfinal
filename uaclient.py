@@ -15,7 +15,7 @@ try:
     CONFIG = sys.argv[1]
     METHOD = sys.argv[2].upper()
     OPTION = sys.argv[3]
-    PRUEBA = []
+    data = []
 
     fich = open(CONFIG, 'r')
     line = fich.readlines()
@@ -60,10 +60,10 @@ try:
     fich = open(PATH_LOG, 'a')
 
     def pdata(my_socket):
-        global PRUEBA
+        global data
         my_socket.send(LINE)
         try:
-            PRUEBA = my_socket.recv(1024)
+            data = my_socket.recv(1024)
         except socket.error:
             fich.write(str(time.time()) + " Error:No server listening at " + IP_PROXY + " port " + PORT_PROXY)
             sys.exit(str(time.time()) + " Error:No server listening at " + \
@@ -101,9 +101,9 @@ if METHOD == "REGISTER":
     LINE += ":" + PORT + " SIP/2.0 \r\n" + "Expires: " + OPTION + "\r\n"
     print LINE
     pdata(my_socket)
-    reciv_register = PRUEBA.split('\r\n\r\n')[0:-1]
+    reciv_register = data.split('\r\n\r\n')[0:-1]
     if reciv_register == ['SIP/2.0 200 OK']:
-        print "Recibido --", PRUEBA
+        print "Recibido --", data
         fich.write(str(time.time()) + " Received from " + IP_PROXY + \
         ":" + PORT_PROXY + ": 200 OK" + '\r\n')
 
@@ -119,8 +119,8 @@ if METHOD == 'INVITE':
     fich = open(PATH_LOG, 'a')
     LINE = 'INVITE ' + "sip: " + OPTION + " SIP/2.0 \r\n"
     LINE += "Content-Type: application/sdp \r\n\r\n" + "v=0 \r\n"
-    LINE += "o=" + USUARIO + " " + IP + ' \r\n'
-    LINE += "s=vampireando"
+    LINE += "o=" + USUARIO + " " + SERVER + ' \r\n'
+    LINE += "s=astronautasvsinsectores"
     LINE += ' \r\n' + "t=0" + ' \r\n' + "m=audio " + PUERTO_AUDIO + \
     ' RTP' + '\r\n'
     fich.write(str(time.time()) + " Sent to " + IP_PROXY + ":" + \
@@ -129,9 +129,9 @@ if METHOD == 'INVITE':
     pdata(my_socket)
 
     try:
-        if PRUEBA != "SIP/2.0 404 User Not Found":
-            Puerto_RTP = PRUEBA.split(' ')[14]
-            invite = PRUEBA.split('\r\n\r\n')[0:-1]
+        if data != "SIP/2.0 404 User Not Found":
+            Puerto_RTP = data.split(' ')[14]
+            invite = data.split('\r\n\r\n')[0:-1]
             reciv_inv = invite[0:3]
             invite1 = str(reciv_inv)
             print 'Recibido PROXY: ' + rcv_invite2
@@ -150,7 +150,7 @@ if METHOD == 'INVITE':
             os.system(aAejecutar)
             print ("Se ha ejecutado" + '\r\n\r\n')
         else:
-            print PRUEBA
+            print data
     except IndexError:
         fich.write(str(time.time()) + \
         " Error: El servidor no esta escuchando")
@@ -165,12 +165,12 @@ if METHOD == 'BYE':
     fich.write(str(time.time()) + " Sent to " + IP_PROXY + \
     ":" + PORT_PROXY + ': ' + BYE + '\r\n')
     pdata(my_socket)
-    reciv_bye = PRUEBA.split('\r\n\r\n')[0:-1]
+    reciv_bye = data.split('\r\n\r\n')[0:-1]
     if reciv_bye == ['SIP/2.0 200 OK']:
         fich.write(str(time.time()) + " Received from " + IP_PROXY + \
         ":" + PORT_PROXY + ": 200 OK" + '\r\n')
         fich.close()
-        print PRUEBA
+        print data
         # Cerramos todo
         my_socket.close()
         print "Fin."
