@@ -62,53 +62,61 @@ class SipHandler(SocketServer.DatagramRequestHandler):
                 self.wfile.write(Answer)
 
 
+          
 
 if __name__ == "__main__":
 
 
-	if len(sys.argv) != 2:
-	    print "Usage: python uaserver.py config"
-	    raise SystemExit
+	try:
 
-    Config = sys.argv[1]
+		if len(sys.argv) != 2:
+		    print "Usage: python uaserver.py config"
+		    raise SystemExit
 
-	print "Listening..."
+		Config = sys.argv[1]
 
-    fich = open(Config, 'r')
-    line = fich.readlines()
-    fich.close()
+		fich = open(Config, 'r')
+		line = fich.readlines()
+		fich.close()
 
 
-    #CLIENTE
-    lineusuario = line[1].split(">")
-    cuenta = lineusuario[0].split("=")[1]
-    USUARIO = cuenta.split(" ")[0][1:-1]
-    #IP
-    lineserver = line[2].split(">")
-    uaserver = lineserver[0].split("=")[1]
-    IP = uaserver.split(" ")[0][1:-1]
-    #Port
-    puertserver = lineserver[0].split("=")[2]
-    PORT = puertserver.split(" ")[0][1:-1]
-    #IP DEL PROXY
-    lineipproxy = line[4].split(">")
-    ipproxy = lineipproxy[0].split("=")[1]
-    IP_PROXY = ipproxy.split(" ")[0][1:-1]
-    #PUERTO DEL PROXY
-    puertoproxy = lineipproxy[0].split("=")[2]
-    PORT_PROXY = puertoproxy.split(" ")[0][1:-1]
-	#Port AUDIO RTP
-    lineaudiortp = line[3].split(">")
-    rtpaudio = lineaudiortp[0].split("=")[1]
-    PUERTO_AUDIO = rtpaudio.split(" ")[0][1:-1]
-    #PATH DEL AUDIO
-    linedeaudio = line[6].split(">")
-    pathaudio = linedeaudio[0].split("=")[1]
-    PATH_AUDIO = pathaudio.split(" ")[0][1:-1]
+		#CLIENTE
+		lineusuario = line[1].split(">")
+		cuenta = lineusuario[0].split("=")[1]
+		USUARIO = cuenta.split(" ")[0][1:-2]
+		#IP
+		lineserver = line[2].split(">")
+		uaserver = lineserver[0].split("=")[1]
+		IP = uaserver.split(" ")[0][1:-1]
+		#Port
+		puertserver = lineserver[0].split("=")[2]
+		PORT = puertserver.split(" ")[0][1:-2]
+		#IP DEL PROXY
+		lineipproxy = line[4].split(">")
+		ipproxy = lineipproxy[0].split("=")[1]
+		IP_PROXY = ipproxy.split(" ")[0][1:-1]
+		#PUERTO DEL PROXY
+		puertoproxy = lineipproxy[0].split("=")[2]
+		PORT_PROXY = puertoproxy.split(" ")[0][1:-2]
+		#Port AUDIO RTP
+		lineaudiortp = line[3].split(">")
+		rtpaudio = lineaudiortp[0].split("=")[1]
+		PUERTO_AUDIO = rtpaudio.split(" ")[0][1:-2]
+		#PATH DEL AUDIO
+		linedeaudio = line[6].split(">")
+		pathaudio = linedeaudio[0].split("=")[1]
+		PATH_AUDIO = pathaudio.split(" ")[0][1:-2]
 
-    my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    my_socket.connect((IP_PROXY, int(PORT_PROXY)))
 	
-    serv = SocketServer.UDPServer(("127.0.0.1", int(PORT)), SipHandler)
-    serv.serve_forever()
+
+		my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+		my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+		my_socket.connect((IP_PROXY, int(PORT_PROXY)))
+		print "Server: " + USUARIO + " listening at port " + \
+		str(PORT) + "..." + "\r\n"
+		print "Listening..."
+		
+		serv = SocketServer.UDPServer(("127.0.0.1", int(PORT)), SipHandler)
+		serv.serve_forever()
+	except IndexError:
+		sys.exit("Usage: python uaserver.py config")
