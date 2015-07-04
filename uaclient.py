@@ -57,7 +57,7 @@ try:
     my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     my_socket.connect((IP_PROXY, int(PORT_PROXY)))
 
-    fichero = open(PATH_LOG, 'r+')
+    fich = open(PATH_LOG, 'a')
 
     def pdata(my_socket):
         global PRUEBA
@@ -65,9 +65,9 @@ try:
         try:
             PRUEBA = my_socket.recv(1024)
         except socket.error:
-           # fich.write(str(time.time()) + " Error:No server listening at " + IP_PROXY + " port " + PORT_PROXY)
-            print ('Error:No server listening at ' + str(IP_PROXY) + " port " + PORT_PROXY)
-            raise SystemExit
+            fich.write(str(time.time()) + " Error:No server listening at " + IP_PROXY + " port " + PORT_PROXY)
+            sys.exit(str(time.time()) + " Error:No server listening at " + \
+            IP_PROXY + " port " + PORT_PROXY )
 
     # Comprobamos si es correcto el numero de argumentos pasados
 
