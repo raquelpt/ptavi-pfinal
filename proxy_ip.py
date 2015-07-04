@@ -153,7 +153,7 @@ if __name__ == "__main__":
     booleano = False
     line = []
 
-    fichero = open(Config, "r")
+    fichero = open(Config, 'r')
     #Abrimos el fichero xml y leemos los datos
     lines = fichero.readlines()
     fichero.close()
@@ -164,7 +164,7 @@ if __name__ == "__main__":
     Server = servidor.split(" ")[0][1:-1]
     #Puerto del proxy
     puerto = line_server[0].split("=")[3]
-    PUERTO_PROX = puerto.split(" ")[0][1:-1]
+    PUERTO_PROX = puerto.split(" ")[0][1:-2]
     #Base de datos
     line_database = lines[2].split(">")
     database = line_database[0].split("=")[1]
@@ -172,9 +172,9 @@ if __name__ == "__main__":
     #log del proxy
     line_log = lines[3].split(">")
     log = line_log[0].split("=")[1]
-    PATH_LOGPROX = log.split(" ")[0][1:-1]
+    PATH_LOGPROXY = log.split(" ")[0][1:-1]
 
-    fich = open(PATH_LOGPROX, "a")
+    fich = open(PATH_LOGPROXY, "a")
 
     # Creamos servidor de eco y escuchamos
 
