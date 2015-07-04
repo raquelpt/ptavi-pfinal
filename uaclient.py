@@ -28,6 +28,7 @@ try:
     CONFIG = sys.argv[1]
     METHOD = sys.argv[2].upper()
     OPTION = sys.argv[3]
+	data = []
 
     if METHOD not in method_list:
        print "Usage: python uaclient.py config method option"
@@ -69,59 +70,62 @@ try:
     PATH_AUDIO = pathaudio.split(" ")[0][1:-1]
 
     # Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
-
     my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     my_socket.connect((IP_PROXY, int(PORT_PROXY)))
 
-fichero = open(PATH_LOG, 'r+')
+    fichero = open(PATH_LOG, 'r+')
 
+    def p_data(my_socket):
+     	global data
+		my_socket.send(LINE)
 
-def p_data(my_socket):
-    print "Enviando: " + LINE
-    my_socket.send(LINE)
     try:
         data = my_socket.recv(1024)
-    except socket.error:
-        print ('Error:No server listening at ' + str(IP_PROXY))
+
+	except socket.error:
+
+		fich.write(str(time.time()) + " Error:No server listening at " + IP_PROXY + " port " + PUERTO_PROXY)
+        print ('Error:No server listening at ' + str(IP_PROXY) + " port " + PORT_PROXY)
         raise SystemExit
 
-    if METHOD == "REGISTER":
-        fich = open(PATH_LOG, 'a')
-        Register = ": REGISTER sip:" + USUARIO + ":" + PORT + \
-        " SIP/2.0 Expires: " + OPTION + '\r\n'
-        fich.write(str(time.time()) + " Sent to " + IP_PROXY + \
-        ":" + PORT_PROXY + Register)
-        LINE = 'REGISTER ' + "sip:" + USUARIO
-        LINE += ":" + PORT + " SIP/2.0 \r\n" + "Expires: " + OPTION + "\r\n"
-        print LINE
-        p_data(my_socket)
-        reciv_register = data.split('\r\n\r\n')[0:-1]
-        if reciv_register == ['SIP/2.0 200 OK']:
-            print "Recibido --", data
-            fich.write(str(time.time()) + " Received from " + IP_PROXY + \
-            ":" + PORT_PROXY + ": 200 OK" + '\r\n')
 
-        if OPTION == '0':
-            fich.write(str(time.time()) + " Finishing...")
-            fich.close()
-            print "Terminando socket..."
-            my_socket.close()
-        else:
-            fich.write(str(time.time()) + " Starting..." + '\r\n')
+if METHOD == "REGISTER":
+    fich = open(PATH_LOG, 'a')
+    Register = ": REGISTER sip:" + USUARIO + ":" + PORT + \
+    " SIP/2.0 Expires: " + OPTION + '\r\n'
+    fich.write(str(time.time()) + " Sent to " + IP_PROXY + \
+    ":" + PORT_PROXY + Register)
+    LINE = 'REGISTER ' + "sip:" + USUARIO
+    LINE += ":" + PORT + " SIP/2.0 \r\n" + "Expires: " + OPTION + "\r\n"
+    print LINE
+    p_data(my_socket)
+    reciv_register = data.split('\r\n\r\n')[0:-1]
+    if reciv_register == ['SIP/2.0 200 OK']:
+        print "Recibido --", data
+        fich.write(str(time.time()) + " Received from " + IP_PROXY + \
+        ":" + PORT_PROXY + ": 200 OK" + '\r\n')
 
-    if METHOD == 'INVITE':
-        fich = open(PATH_LOG, 'a')
-        LINE = 'INVITE ' + "sip: " + OPTION + " SIP/2.0 \r\n"
-        LINE += "Content-Type: application/sdp \r\n\r\n" + "v=0 \r\n"
-        LINE += "o=" + USUARIO + " " + IP + ' \r\n'
-        LINE += "s=vampireando"
-        LINE += ' \r\n' + "t=0" + ' \r\n' + "m=audio " + PUERTO_AUDIO + \
-        ' RTP' + '\r\n'
-        fich.write(str(time.time()) + " Sent to " + IP_PROXY + ":" + \
-        PORT_PROXY + ': ' + LINE + '\r\n')
-        print LINE
-        p_data(my_socket)
+    if OPTION == '0':
+        fich.write(str(time.time()) + " Finishing...")
+        fich.close()
+        print "Terminando socket..."
+        my_socket.close()
+    else:
+        fich.write(str(time.time()) + " Starting..." + '\r\n')
+
+if METHOD == 'INVITE':
+    fich = open(PATH_LOG, 'a')
+    LINE = 'INVITE ' + "sip: " + OPTION + " SIP/2.0 \r\n"
+    LINE += "Content-Type: application/sdp \r\n\r\n" + "v=0 \r\n"
+    LINE += "o=" + USUARIO + " " + IP + ' \r\n'
+    LINE += "s=vampireando"
+    LINE += ' \r\n' + "t=0" + ' \r\n' + "m=audio " + PUERTO_AUDIO + \
+    ' RTP' + '\r\n'
+    fich.write(str(time.time()) + " Sent to " + IP_PROXY + ":" + \
+    PORT_PROXY + ': ' + LINE + '\r\n')
+    print LINE
+    p_data(my_socket)
 
     try:
         if data != "SIP/2.0 404 User Not Found":
@@ -144,28 +148,28 @@ def p_data(my_socket):
             print "Ejecutamos", aAejecutar
             os.system(aAejecutar)
             print ("Se ha ejecutado" + '\r\n\r\n')
-            else:
-                print data
+        else:
+            print data
         except IndexError:
             fich.write(str(time.time()) + \
             " Error: El servidor no esta escuchando")
             sys.exit(str(time.time()) + \
             "  Error: El servidor no esta escuchando")
 
-    if METHOD == 'BYE':
-        fich = open(PATH_LOG, 'a')
-        BYE = 'BYE ' + "sip:" + OPTION + " SIP/2.0" + '\r\n'
-        print BYE
-        LINE = BYE
-        fich.write(str(time.time()) + " Sent to " + IP_PROXY + \
-        ":" + PORT_PROXY + ': ' + BYE + '\r\n')
-        p_data(my_socket)
-        reciv_bye = data.split('\r\n\r\n')[0:-1]
-        if reciv_bye == ['SIP/2.0 200 OK']:
-            fich.write(str(time.time()) + " Received from " + IP_PROXY + \
-            ":" + PORT_PROXY + ": 200 OK" + '\r\n')
-            fich.close()
-            print data
-            # Cerramos todo
-            my_socket.close()
-            print "Fin."
+if METHOD == 'BYE':
+    fich = open(PATH_LOG, 'a')
+    BYE = 'BYE ' + "sip:" + OPTION + " SIP/2.0" + '\r\n'
+    print BYE
+    LINE = BYE
+    fich.write(str(time.time()) + " Sent to " + IP_PROXY + \
+    ":" + PORT_PROXY + ': ' + BYE + '\r\n')
+    p_data(my_socket)
+    reciv_bye = data.split('\r\n\r\n')[0:-1]
+    if reciv_bye == ['SIP/2.0 200 OK']:
+        fich.write(str(time.time()) + " Received from " + IP_PROXY + \
+        ":" + PORT_PROXY + ": 200 OK" + '\r\n')
+        fich.close()
+        print data
+        # Cerramos todo
+        my_socket.close()
+        print "Fin."
