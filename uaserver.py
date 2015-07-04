@@ -1,280 +1,115 @@
 #!/usr/bin/python
 # -*- coding: iso-8859-15 -*-
-
 """
 Clase (y programa principal) para un servidor en SIP
 """
 
-
 import SocketServer
 import sys
 import os
-import time
-from xml.sax import make_parser
-from xml.sax.handler import ContentHandler
+import os.path
+import socket
 
 
-Direccion = ""
-P_Servi = ""
-P_rtp = ""
-
-
-class ServidorHandler(ContentHandler):
-
-    def __init__(self):
-
-        """
-        Inicializando el diccionario
-        """
-
-        self.diccionario = {}
-
-
-    def startElement(self, name, attrs):
-
-        """
-        Añadiendo atributos al diccionario
-        """
-
-        if name == "account":
-            username = attrs.get("username", "")
-            self.diccionario["userName"] = username
-        if name == "uaserver":
-            ip = attrs.get("ip", "127.0.0.1")
-            puerto = attrs.get("puerto", "")
-            self.diccionario["servIp"] = ip
-            self.diccionario["servPort"] = puerto
-        if name == "rtpaudio":
-            puerto = attrs.get("puerto", "")
-            self.diccionario["rtpPort"] = puerto
-        if name == "regproxy":
-            ip = attrs.get("ip", "")
-            puerto = attrs.get("puerto", "")
-            self.diccionario["proxIp"] = ip
-            self.diccionario["proxPort"] = puerto
-        if name == "log":
-            path = attrs.get("path", "")
-            self.diccionario["logPath"] = path
-        if name == "audio":
-            path = attrs.get("path", "")
-            self.diccionario["audioPath"] = path
-
-
-    def get_attrs(self):
-
-        """
-        Lista con los atributos
-        """
-
-        return self.diccionario
-
+P_rtp = []
 
 class SipHandler(SocketServer.DatagramRequestHandler):
-    
+
     def handle(self):
+		
         while 1:
-
             # Leyendo línea a línea lo que nos envía el cliente
-
             line = self.rfile.read()
-
             # Si no hay más líneas salimos del bucle infinito
             if not line:
-
                 break
             # Seleccionamos la respuesta correcta
-
             print "El cliente nos manda " + line
-
             Metodo = line.split(" ")[0]
-
+			# Comprobamos el metodo que nos han mandado
             if Metodo == "INVITE" or Metodo == "ACK" or Metodo == "BYE":
-
-                if Metodo == "INVITE" and \
-
-                    line.split(" ")[2] == 'SIP/2.0\r\n\r\n':
-
-
-
-                    Answer = "SIP/2.0 100 Trying\r\n\r\n"
-
+				
+                if Metodo == "INVITE":
+					Destinatario = lines.split(' ')[2]
+					global P_rtp
+					P_rtp = lines.split(' ')[12]
+					# Si el metodo es invite enviamos la correspondiente 
+					# respuesta
+                    Answer = 'SIP/2.0 100 Trying' + '\r\n\r\n'
                     Answer += "SIP/2.0 180 Ringing\r\n\r\n"
-
                     Answer += "SIP/2.0 200 OK\r\n\r\n"
-
                     Answer += "ContentType: application/sdp" + "\r\n\r\n"
-
                     Answer += "v=0" + "\r\n"
-
-                    Answer += "o=" + Direccion + " " + P_Server + "\r\n"
-
+                    Answer += "o=" + USUARIO + " " + IP + "\r\n"
                     Answer += "s=misesion" + "\r\n"
-
                     Answer += "t=0" + "\r\n"
-
-                    Answer += "m=audio " + P_rtp + " RTP" + "\r\n\r\n"
-
+                    Answer += "m=audio " + str(PUERTO_AUDIO) + " RTP" + "\r\n\r\n"
                     self.wfile.write(Answer)
-
                     print(Answer)
 
-                    accion = "Enviar a " + str(ProxIp) + ":"
-
-                    accion += str(ProxPort)
-
-                    log(accion, Answer, fich_log)
-
-
-
                 elif Metodo == "ACK":
-
                     # Tratamiento ACK
-
-                    aEjecutar = "mp32rtp -i 127.0.0.1 -p" + P_rtp + \ 
-                    " < " + FICHERO_AUDIO
-
+                    aEjecutar = "mp32rtp -i 127.0.0.1 -p" + str(P_rtp) + " < " + PATH_AUDIO
                     print "Vamos a ejecutar", aEjecutar
-
                     os.system(aEjecutar)
-
-                    accion = "Recivido de " + str(ProxyIp) + ":"
-
-                    accion += str(Proxy_Port)
-
-                    Answer = FICHERO_AUDIO
-
-                    log(accion, Answer, fich_log)
-
                 elif Metodo == "BYE":
-
                     # Tratamiento BYE
-
                     Answer = "SIP/2.0 200 OK\r\n\r\n"
-
                     self.wfile.write(Answer)
-
-                    accion = "Sent to " + str(ProxIp) + ":"
-
-                    accion += str(ProxPort) + ":"
-
-                    log(accion, Answer, fich_log)
-
-                else:
-
-                    Answer = "SIP/2.0 400 Bad Request"
-
-                    accion = "Sent to " + str(ProxIp) + ":"
-
-                    accion += str(ProxPort) + ":"
-
-                    log(accion, Answer, fich_log)
-
+                    print (Answer)
             else:
-
+				# No se trata de ninguno de los metodos permitidos
                 Answer = "SIP/2.0 405 Method Not Allowed"
-
-                accion = "Sent to " + str(ProxIp) + ":"
-
-                accion += str(ProxPort) + ":"
-
-                log(accion, Answer, fich_log)
-
-
-
-            # Imprimimos la respuesta y la enviamos
-
-
-
-            if Metodo != "ACK":
-
-                print "Enviamos:" + Answer
-
+                print Answer
                 self.wfile.write(Answer)
 
 
-
-    def log(self, accion, linea, logFile):
-
-        """
-
-        Metodo para poder imprimir debug por pantalla y log en el fichero
-
-        """
-
-
-
-        tiempo = time.strftime('%Y%m%d%H%M%S', time.gmtime(time.time()))
-
-        line = linea.split("\r\n", " ")
-
-        texto = ' '.join(line)
-
-        logFile = open(LOG_FILE, 'a')
-
-        logFile.write(tiempo + ' ' + line + '\n')
-
-        logFile.close()
-
-
+          
 
 if __name__ == "__main__":
 
 
-
     if len(sys.argv) != 2:
-
         print "Usage: python uaserver.py config"
-
         raise SystemExit
-
-
 
     Config = sys.argv[1]
 
+    fich = open(Config, 'r')
+    line = fich.readlines()
+    fich.close()
 
+    #CLIENTE
+    lineusuario = line[1].split(">")
+    cuenta = lineusuario[0].split("=")[1]
+    USUARIO = cuenta.split(" ")[0][1:-1]
+    #IP
+    lineserver = line[2].split(">")
+    uaserver = lineserver[0].split("=")[1]
+    IP = uaserver.split(" ")[0][1:-1]
+    #Port
+    puertserver = lineserver[0].split("=")[2]
+    PORT = puertserver.split(" ")[0][1:-1]
+    #IP DEL PROXY
+    lineipproxy = line[4].split(">")
+    ipproxy = lineipproxy[0].split("=")[1]
+    IP_PROXY = ipproxy.split(" ")[0][1:-1]
+    #PUERTO DEL PROXY
+    puertoproxy = lineipproxy[0].split("=")[2]
+    PORT_PROXY = puertoproxy.split(" ")[0][1:-1]
+	#Port AUDIO RTP
+    lineaudiortp = line[3].split(">")
+    rtpaudio = lineaudiortp[0].split("=")[1]
+    PUERTO_AUDIO = rtpaudio.split(" ")[0][1:-1]
+    #PATH DEL AUDIO
+    linedeaudio = line[6].split(">")
+    pathaudio = linedeaudio[0].split("=")[1]
+    PATH_AUDIO = pathaudio.split(" ")[0][1:-1]
 
-    parser = make_parser()
-
-    Datos = SipHandler()
-
-    parser.setContentHandler(Datos)
-
-    parser.parse(open(Config))
-
-
-
-    Dicc = SipHandler_Datos.get_attrs()
-
-    USERNAME = Dicc['userName']
-
-    IP = Dicc['servIp']
-
-    PORT = int(Dicc['servPort'])
-
-    RTP_PORT = Dicc['rtpPort']
-
-    PROXY_IP = Dicc['proxIp']
-
-    PROXY_PORT = Dicc['proxPort']
-
-    LOG = Dicc['logPath']
-
-    AUDIO = Dicc['audioPath']
-
-
-
-    Direccion = USERNAME + '@dominio.com'
-
-    log('', '', '', 'Starting...')
-
-
-
-    try:
-
-
-
-        serv = SocketServer.UDPServer((IP, PORT), SipHandler)
-
-        print "Listening..."
-
-        serv.serve_forever()
+	my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+	my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+	my_socket.connect((IP_PROXY, int(PORT_PROXY)))
+		
+    serv = SocketServer.UDPServer(("127.0.0.1", int(PORT)), SipHandler)
+    print "Listening..."
+    serv.serve_forever()
