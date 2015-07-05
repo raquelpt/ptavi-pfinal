@@ -9,10 +9,7 @@ import socket
 import time
 
 
-
-
 class Proxy(SocketServer.DatagramRequestHandler):
-
 
     def register2file(self):
         """
@@ -29,7 +26,6 @@ class Proxy(SocketServer.DatagramRequestHandler):
             escribe += str(Date) + "\t" + str(Expires) + "\r\n"
             fich.write(escribe)
         fich.close()
-
 
     def handle(self):
 
@@ -56,7 +52,7 @@ class Proxy(SocketServer.DatagramRequestHandler):
                 print line
                 self.Send()
                 if Booleano == True:
-                       continue
+                    continue
 
             elif Metodo == "BYE":
                     print line
@@ -97,7 +93,6 @@ class Proxy(SocketServer.DatagramRequestHandler):
                 self.Send()
                 if Booleano == True:
                     continue
-
 
     def Send(self):
         """
@@ -151,8 +146,6 @@ class Proxy(SocketServer.DatagramRequestHandler):
             #se envia un mensaje de error al no encontrarlo
             self.wfile.write("SIP/2.0 404 User Not Found")
             booleano = True
-
-
 
 
 if __name__ == "__main__":
