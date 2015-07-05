@@ -51,7 +51,7 @@ try:
     linedeaudio = line[6].split(">")
     pathaudio = linedeaudio[0].split("=")[1]
     PATH_AUDIO = pathaudio.split(" ")[0][1:-2]
-    
+
     # Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
     my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -65,9 +65,10 @@ try:
         try:
             data = my_socket.recv(1024)
         except socket.error:
-            fich.write(str(time.time()) + " Error:No server listening at " + IP_PROXY + " port " + PORT_PROXY)
+            fich.write(str(time.time()) + " Error:No server listening at " + \
+            IP_PROXY + " port " + PORT_PROXY)
             sys.exit(str(time.time()) + " Error:No server listening at " + \
-            IP_PROXY + " port " + PORT_PROXY )
+            IP_PROXY + " port " + PORT_PROXY)
 
     # Comprobamos si es correcto el numero de argumentos pasados
 
