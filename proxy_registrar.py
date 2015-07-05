@@ -9,7 +9,10 @@ import socket
 import time
 
 
+
+
 class Proxy(SocketServer.DatagramRequestHandler):
+
 
     def register2file(self):
         """
@@ -27,8 +30,10 @@ class Proxy(SocketServer.DatagramRequestHandler):
             fich.write(escribe)
         fich.close()
 
+
     def handle(self):
 
+        global Booleano, Destinatario, line
         while 1:
             line = self.rfile.read()
             if not line:
@@ -88,20 +93,25 @@ class Proxy(SocketServer.DatagramRequestHandler):
 
             elif not Metodo in Lista:
                 Destinatario = Linea[1]
+                print Destinatario
                 self.Send()
                 if Booleano == True:
                     continue
+
 
     def Send(self):
         """
         Buscamos el destinatario en nuestro diccionario
         de direcciones para poder enviarle las respuestas
         """
+
         global Booleano, Destinatario, line
         line_list = line
         Cliente = " "
         for clave in dicc:
-            if clave == Destinatario:
+            Usuario = clave.split(" ")[0]
+            print Usuario
+            if Usuario == Destinatario:
                 Cliente = Destinatario
                 IP = dicc[clave][0]
                 PUERTO = dicc[clave][1]
@@ -109,11 +119,12 @@ class Proxy(SocketServer.DatagramRequestHandler):
                 my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 my_socket.connect((IP, int(PUERTO)))
-                my_socket.send(line + "\r\n")
+                my_socket.send(str(line) + "\r\n")
                 linea = my_socket.recv(1024)
                 #una vez que nos hemos atado
                 #analizamos el metodo del que se trata
                 if line_list[0] == "INVITE":
+                    print "invite"
                     fich.write(str(time.time()) + " Recibido " + line + "\r\n")
                     rcv_invite = linea.split("\r\n\r\n")[0:-1]
                     rcv_invite1 = rcv_invite[0:3]
@@ -140,6 +151,9 @@ class Proxy(SocketServer.DatagramRequestHandler):
             #se envia un mensaje de error al no encontrarlo
             self.wfile.write("SIP/2.0 404 User Not Found")
             booleano = True
+
+
+
 
 if __name__ == "__main__":
 
